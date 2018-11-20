@@ -17,7 +17,7 @@ function partitions = partition(N, k)
     partitions.test  = {k};
     partitionSize    = round(N / k);
     
-    % 1 indicates value used, 0 not used.
+    % 1 indicates value used, 0 not used. Allows O(1) lookup.
     numsUsed = zeros(1, N);
     
     for i = 1:k
@@ -25,10 +25,10 @@ function partitions = partition(N, k)
         while length(testPartition) < partitionSize
             randN = randi(N);
             
-            % Check randN not used previously, look up index in numsUsed
-            if ~any(numsUsed == randN)
-                    testPartition = [testPartition randN];
-                    numsUsed(i) = 1;
+            % Check randN not used previously, look up index in numsUsed.
+            if ~numsUsed(randN)
+                testPartition = [testPartition randN];
+                numsUsed(randN) = 1;
             end
         end
         partitions.test{i} = testPartition;
