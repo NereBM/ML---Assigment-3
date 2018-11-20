@@ -15,23 +15,22 @@ function partitions = partition(N, k)
     partitions       = struct;
     partitions.train = {k};
     partitions.test  = {k};
-    partitionSize    = round(N / k);
     
     % 1 indicates value used, 0 not used. Allows O(1) lookup.
-    numsUsed = zeros(1, N);
+    used = zeros(1, N);
     
     for i = 1:k
         testPartition = [];       
-        while length(testPartition) < partitionSize
-            randN = randi(N);
+        while length(testPartition) < floor(N / k)
+            randIndex = randi(N);
             
             % Check randN not used previously, look up index in numsUsed.
-            if ~numsUsed(randN)
-                testPartition = [testPartition randN];
-                numsUsed(randN) = 1;
+            if ~used(randIndex)
+                testPartition = [testPartition randIndex];
+                used(randIndex) = 1;
             end
         end
-        partitions.test{i} = testPartition;
+        partitions.test{i}  = testPartition;
         partitions.train{i} = setdiff(1:N, testPartition);
     end
 end
