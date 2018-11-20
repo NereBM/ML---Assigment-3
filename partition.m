@@ -10,25 +10,28 @@
 %   }
 %}
 
-function partitions = cvPartition(N, k)
+function partitions = partition(N, k)
 
     partitions       = struct;
     partitions.train = {k};
     partitions.test  = {k};
     partitionSize    = round(N / k);
     
+    % 1 indicates value used, 0 not used.
+    numsUsed = zeros(1, N);
+    
     for i = 1:k
         testPartition = [];       
         while length(testPartition) < partitionSize
-            randN = randi(N);            
-            % Check randN not in testPartition and not in partitions.test
-            if ~any(testPartition == randN) ...
-                & ~cellfun(@(x) any(x == randN), partitions.test)
-                testPartition = [testPartition randN];
+            randN = randi(N);
+            
+            % Check randN not used previously, look up index in numsUsed
+            if ~any(numsUsed == randN)
+                    testPartition = [testPartition randN];
+                    numsUsed(i) = 1;
             end
         end
         partitions.test{i} = testPartition;
         partitions.train{i} = setdiff(1:N, testPartition);
     end
-
 end
