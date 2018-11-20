@@ -7,4 +7,10 @@ points = reshape(points, ...
 pose = transpose(pose(:,6));
 points = transpose(points);
 
-svm = regressionSVM(points, pose, 'rbf', 0.4);
+
+paramGrid = struct;
+paramGrid.c = [1, 10, 100, 1000];
+paramGrid.kernel = 'rbf';
+paramGrid.epsilon = [0.1, 1, 10, 100];
+
+svm = regressionSVM(points, pose, 10, paramGrid);
