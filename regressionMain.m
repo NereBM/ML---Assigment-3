@@ -10,8 +10,11 @@ points = transpose(points);
 
 paramGrid = struct;
 paramGrid.c = [0.1, 1, 10, 100];
-paramGrid.kernel = 'rbf';
-paramGrid.paramString = 'KernelScale';
-paramGrid.kernelParam = [0.1, 1, 10, 100];
+paramGrid.kernel = ["rbf","polynomial"];
+paramGrid.paramString = ["KernelScale","PolynomialOrder"];
+paramGrid.kernelParam = [0.1, 1, 10, 100 ; 2 3 4 5];
 paramGrid.epsilon = [0.1, 1, 10, 100];
 svm = regressionSVM(points, pose, 10, paramGrid, true);
+
+
+
