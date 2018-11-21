@@ -38,7 +38,8 @@ function data = trainSVMClass(X, y, k, paramGrid)
                      , paramGrid.paramString , kernelParam         ...
                      , 'BoxConstraint', best_mdl.BoxConstraints(1) ...
                      );
-
+        
+                 
         predicted = predict(mdl, test);
         transpose(predicted)
         testLabels
@@ -50,7 +51,7 @@ end
         
 function best_mdl = gridSearch(X, y, paramGrid)
     
-    best_score = 1000;
+    best_score = 0;
     for i = 1:3
         gridSearchPartition = partition(length(y), 3);
         train = X(gridSearchPartition.train{i}, :);
@@ -72,7 +73,7 @@ function best_mdl = gridSearch(X, y, paramGrid)
                 [recall, precision] = calcRecallPrecision(predicted, testLabels);
                 score = calcF1Score(recall, precision);
 
-                if score < best_score
+                if score > best_score
                    best_mdl = mdl;
                    best_score = score;
                 end
