@@ -1,18 +1,20 @@
-% paramGrid is struct with format:
+%   Input: paramGrid is struct with format:
 %
 %   struct paramGrid {
 %       c :: Vector of values for c
 %       kernel :: String 
-%       epsilon :: Vector of values for epsilon
 %       sigma :: Vector of values for sigma
+%   }
+%
+%   Output: data struct with format:
+%   
+%   struct data {
+%       mdl :: SVM model
+%       score :: RMSE or F1 score
+%   }
 
-
-% struct data {
-%     mdl :: SVM model
-%     score :: RMSE or F1 score
-% }
-
-function data = classificationSVM(X, y, k, paramGrid, regr)
+function data = trainSVMClass(X, y, k, paramGrid)
+    data = struct;
     cv = partition(length(y), k);
     
     for i = 1:k
@@ -23,87 +25,61 @@ function data = classificationSVM(X, y, k, paramGrid, regr)
         
         % Perform grid search on first iteration of loop.
         if i == 1
-            best_mdl = gridSearch( train, trainLabels ...
-                            , test,  testLabels ...
-                            , paramGrid, regr);
+            best_mdl = gridSearch(train, trainLabels, paramGrid);
+            if paramGrid.kernel == "rbf"
+                kernelParam = best_mdl.KernelParameters.Scale;
+            elseif paramGrid.kernel == "polynomial"
+                kernelParam = best_mdl.KernelParameters.Order;
+            end
         end
-        if best_mdl.KernelParameters.Function == "gaussian"
-            data.mdl{i} = fitrsvm( train, trainLabels                   ...
-                         , 'KernelFunction', best_mdl.KernelParameters.Function           ...
-                         , paramGrid.paramString(1)                     ...
-                            , best_mdl.KernelParameters.Scale           ...
-                         , 'BoxConstraint', best_mdl.BoxConstraints(1)  ...
-                         , 'Epsilon', best_mdl.Epsilon                  ...
-                         );
-        elseif best_mdl.KernelParameters.Function == "polynomial"
-            data.mdl{i} = fitrsvm( train, trainLabels                   ...
-                         , 'KernelFunction', best_mdl.KernelParameters.Function           ...
-                         , paramGrid.paramString(1)                     ...
-                            , best_mdl.KernelParameters.Order           ...
-                         , 'BoxConstraint', best_mdl.BoxConstraints(1)  ...
-                         , 'Epsilon', best_mdl.Epsilon                  ...
-                         );
-        end
-           
-            predicted = predict(data.mdl{i}, test);
-            data.score{i} = calcRMSE(predicted, testLabels);
-        end
+        
+        mdl = fitcsvm( train, trainLabels                          ...
+                     , 'KernelFunction' , paramGrid.kernel         ...
+                     , paramGrid.paramString , kernelParam         ...
+                     , 'BoxConstraint', best_mdl.BoxConstraints(1) ...
+                     );
+
+        predicted = predict(mdl, test);
+        transpose(predicted)
+        testLabels
+        [recall, precision] = calcRecallPrecision(predicted, testLabels)
+        data.score{i} = calcF1Score(recall, precision)
+        data.mdl{i} = mdl;
     end
 end
-
-function best_mdl = gridSearch(xTrain, yTrain, xTest, yTest, paramGrid, regr)
+        
+function best_mdl = gridSearch(X, y, paramGrid)
     
     best_score = 1000;
-
     for i = 1:3
-        innerCV = partition(size(xTrain, 2), 3);
-        innerTrain = xTrain(innerCV.train{i}, :);
-        innerTrainLabels = yTrain(innerCV.train{i});
-        xTest
-        innerTest = xTest(innerCV.test{i}, :);
-        innerTestLabels = yTest(innerCV.test{i});
+        gridSearchPartition = partition(length(y), 3);
+        train = X(gridSearchPartition.train{i}, :);
+        trainLabels = y(gridSearchPartition.train{i});
+        test = X(gridSearchPartition.test{i}, :);
+        testLabels = y(gridSearchPartition.test{i});
         
-        for m = 1:length(paramGrid.kernel)
-            for j = 1:length(paramGrid.c)        
-                for k = 1:length(paramGrid.kernelParam)
-                    if regr     % regressionSVM
-                        for l = 1:length(paramGrid.epsilon)
-                            mdl = fitrsvm( innerTrain, innerTrainLabels         ...
-                                , 'KernelFunction', paramGrid.kernel(m)         ...
-                                , paramGrid.paramString(m), paramGrid.kernelParam(m,j)  ...
-                                , 'BoxConstraint', paramGrid.c(k)               ...
-                                , 'Epsilon', paramGrid.epsilon(l)               ...
-                                );
+        for j = 1:length(paramGrid.c)        
+            for k = 1:length(paramGrid.kernelParam)
+                    
+                mdl = fitcsvm( train, trainLabels        ...
+                    , 'KernelFunction', paramGrid.kernel ...
+                    , 'BoxConstraint', paramGrid.c(j)    ...
+                    , paramGrid.paramString              ...
+                        , paramGrid.kernelParam(k)       ...
+                    );
 
-                            predicted = predict(mdl, innerTest);
-                            score = calcRMSE(predicted, innerTestLabels);
-                            if score < best_score
-                               best_mdl = mdl;
-                               best_score = score;
-                            end
-                        end
-                    else        % binarySVM
-                        mdl = fitcsvm( innerTrain, innerTrainLabels         ...
-                            , 'KernelFunction', paramGrid.kernel(m)         ...
-                            ,  paramGrid.paramString(m), paramGrid.kernelParam(m,j) ...
-                            , 'BoxConstraint', paramGrid.c(k)               ...
-                            );  
+                predicted = predict(mdl, test);
+                [recall, precision] = calcRecallPrecision(predicted, testLabels);
+                score = calcF1Score(recall, precision);
 
-                        predicted = predict(mdl, innerTest);
-                        [recall,precision] = calcRecallPrecision(predicted, innerTestLabels);
-                        score = calcF1Score(recall,precision);
-
-                        if score > best_score
-                           best_mdl = mdl;
-                           best_score = score;
-                        end
-                    end
+                if score < best_score
+                   best_mdl = mdl;
+                   best_score = score;
                 end
             end
         end
     end
 end
-
 
 %{
 %   Input:  Vectors containing predicted and actual labels for binary
