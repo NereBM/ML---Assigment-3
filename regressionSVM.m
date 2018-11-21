@@ -4,48 +4,95 @@
 %       c :: Vector of values for c
 %       kernel :: String 
 %       epsilon :: Vector of values for epsilon
+%       sigma :: Vector of values for sigma
 
-function mdls = regressionSVM(X, y, k, paramGrid)
+
+% struct data {
+%     mdl :: SVM model
+%     score :: RMSE or F1 score
+% }
+
+function data = regressionSVM(X, y, k, paramGrid, regr)
     cv = partition(length(y), k);
     mdls.mdl = {};
     mdls.rmse = [];
     
     
     for i = 1:k
-        outerTrain = X(cv.train{i}, :);
-        outerTrainActual = y(cv.train{i});
-        outerTest = X(cv.test{i}, :);
-        outerTestActual = y(cv.test{i});
+        train = X(cv.train{i}, :);
+        trainLabels = y(cv.train{i});
+        test = X(cv.test{i}, :);
+        testLabels = y(cv.test{i});
         
-        for j = 1:3
-            innerCV = partition(size(outerTrain, 2), 3);
-            innerTrain = outerTrain(innerCV.train{j}, :);
-            innerTrainActual = outerTrainActual(innerCV.train{j});
-            innerTest = outerTest(innerCV.test{j}, :);
-            innerTestActual = outerTestActual(innerCV.test{j});
-            
-            % Perform grid search
-            for k = 1:1
-                for l = 1:1
-                    % tune parameters within inner loop
-                    mdls.mdl{i*j*k*l} =                             ...
-                        fitrsvm( innerTrain, innerTrainActual       ...
-                               , 'BoxConstraint', paramGrid.c(k)    ...
-                               , 'KernelFunction', paramGrid.kernel ...
-                               , 'Epsilon', paramGrid.epsilon(l)    ...
-                               );
-                    predicted = predict(mdls.mdl{i*j*k*l}, innerTest);
-                    calcRMSE(predicted, innerTestActual)
-                    mdls.rmse(i*j*k*l) = calcRMSE(predicted, innerTestActual);
-                end
-            end
+        % Perform grid search on first iteration of loop.
+        if i == 1
+            best_mdl = gridSearch( train, trainLabels ...
+                            , test,  testLabels ...
+                            , paramGrid, regr);
         end
+        
+        mdl = fitrsvm( train, trainLabels                 ...
+                     , 'KernelFunction', paramGrid.kernel           ...
+                     , paramGrid.paramString                        ...
+                        , best_mdl.KernelParameters.Scale           ...
+                     , 'BoxConstraint', best_mdl.BoxConstraints(1)  ...
+                     , 'Epsilon', best_mdl.Epsilon                  ...
+                     );
+        predicted = predict(mdl, test);
+        data.score{i} = calcRMSE(predicted, testLabels);
     end
 end
 
 function rmse = calcRMSE(predicted, actual)
     rmse = sqrt(mean((transpose(predicted) - actual).^2));
 end
+
+function best_mdl = gridSearch(xTrain, yTrain, xTest, yTest, paramGrid, regr)
+    
+    best_score = 1000;
+
+    for i = 1:3
+        innerCV = partition(size(xTrain, 2), 3);
+        innerTrain = xTrain(innerCV.train{i}, :);
+        innerTrainLabels = yTrain(innerCV.train{i});
+        innerTest = xTest(innerCV.test{i}, :);
+        innerTestLabels = yTest(innerCV.test{i});
+
+        for j = 1:length(paramGrid.c)        
+            for k = 1:length(paramGrid.kernelParam)
+                if regr
+                    mdl = fitrsvm( innerTrain, innerTrainLabels     ...
+                        , 'KernelFunction', paramGrid.kernel        ...
+                        , paramGrid.paramString, paramGrid.kernelParam(j)  ...
+                        , 'BoxConstraint', paramGrid.c(k)           ...
+                        , 'Epsilon', paramGrid.epsilon(l)           ...
+                        );
+                   
+                    predicted = predict(mdl, innerTest);
+                    score = calcRMSE(predicted, innerTestLabels);
+                    if score < best_score
+                       best_mdl = mdl;
+                       best_score = score;
+                    end
+                else
+                    mdl = fitcsvm( innerTrain, innerTrainLabels     ...
+                        , 'KernelFunction', paramGrid.kernel        ...
+                        ,  paramGrid.paramString, paramGrid.kernelParam(j) ...
+                        , 'BoxConstraint', paramGrid.c(k)           ...
+                        );  
+                    
+                    predicted = predict(mdl, innerTest);
+                    score = calcF1(predicted, innerTestLabels);
+                    if score > best_score
+                       best_mdl = mdl;
+                       best_score = score;
+                    end
+                end
+            end
+        end
+    end
+end
+
 %{
 %   Optimal hyper-parameters to find:
 %       'BoxConstraint' - for all

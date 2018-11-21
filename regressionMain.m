@@ -9,8 +9,9 @@ points = transpose(points);
 
 
 paramGrid = struct;
-paramGrid.c = [1, 10, 100, 1000];
+paramGrid.c = [0.1, 1, 10, 100];
 paramGrid.kernel = 'rbf';
+paramGrid.paramString = 'KernelScale'
+paramGrid.kernelParam = [0.1, 1, 10, 100];
 paramGrid.epsilon = [0.1, 1, 10, 100];
-
-svm = regressionSVM(points, pose, 10, paramGrid);
+svm = regressionSVM(points, pose, 10, paramGrid, true);
