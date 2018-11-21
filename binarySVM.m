@@ -46,20 +46,3 @@ end
 function rmse = calcRMSE(predicted, actual)
     rmse = sqrt(mean((transpose(predicted) - actual).^2));
 end
-
-function
-%{
-%   Optimal hyper-parameters to find:
-%       'BoxConstraint' - for all
-%           - Positive scalar value
-%       'KernelScale' - for classification
-%           - Positive scalar value
-%       'Epsilon' - for regression
-%           - Non negative scalar value
-%       'sigma' - for 'rbf'
-%           - Non negative scalar value
-%       'q' - for 'polynomial'
-%           - Positive scalar value
-%
-%   SEE: https://www.mathworks.com/help/stats/fitrsvm.html#namevaluepairs
-%}
