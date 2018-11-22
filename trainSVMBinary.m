@@ -13,7 +13,7 @@
 %       score :: RMSE or F1 score
 %   }
 
-function data = trainSVMClass(X, y, k, paramGrid)
+function data = trainSVMBinary(X, y, k, paramGrid)
     data = struct;
     cv = partition(length(y), k);
     
@@ -24,14 +24,28 @@ function data = trainSVMClass(X, y, k, paramGrid)
         testLabels = y(cv.test{i});
         
         % Perform grid search on each iteration of loop.
-        best_mdl = gridSearch(train, trainLabels, paramGrid);
-        if paramGrid.kernel == "rbf"
-            kernelParam = best_mdl.KernelParameters.Scale;
-        elseif paramGrid.kernel == "polynomial"
-            kernelParam = best_mdl.KernelParameters.Order;
+        if i == 1
+            best_mdl = gridSearch(train, trainLabels, paramGrid);
+            if paramGrid.kernel == "rbf"
+                kernelParam = best_mdl.KernelParameters.Scale;
+            elseif paramGrid.kernel == "polynomial"
+                kernelParam = best_mdl.KernelParameters.Order;
+            end
         end
         
+        if paramGrid.kernel == "linear"
+            
+            mdl = fitcsvm( train, trainLabels                          ...
+                     , 'KernelFunction' , paramGrid.kernel         ...
+                     , 'BoxConstraint', best_mdl.BoxConstraints(1) ...
+                     );
         
+            predicted = predict(mdl, test);        
+            [recall, precision] = calcRecallPrecision(predicted, testLabels);
+            data.score{i} = calcF1Score(recall, precision);
+            data.mdl{i} = mdl;
+            
+        else
         mdl = fitcsvm( train, trainLabels                          ...
                      , 'KernelFunction' , paramGrid.kernel         ...
                      , paramGrid.paramString , kernelParam         ...
@@ -43,6 +57,7 @@ function data = trainSVMClass(X, y, k, paramGrid)
         [recall, precision] = calcRecallPrecision(predicted, testLabels);
         data.score{i} = calcF1Score(recall, precision);
         data.mdl{i} = mdl;
+        end
     end
 end
         
@@ -55,16 +70,12 @@ function best_mdl = gridSearch(X, y, paramGrid)
         trainLabels = y(gridSearchPartition.train{i});
         test = X(gridSearchPartition.test{i}, :);
         testLabels = y(gridSearchPartition.test{i});
-        
-        for j = 1:length(paramGrid.c)        
-            for k = 1:length(paramGrid.kernelParam)
-                    
+        if paramGrid.kernel == "linear"
+            for j = 1:length(paramGrid.c) 
                 mdl = fitcsvm( train, trainLabels        ...
-                    , 'KernelFunction', paramGrid.kernel ...
-                    , 'BoxConstraint', paramGrid.c(j)    ...
-                    , paramGrid.paramString              ...
-                        , paramGrid.kernelParam(k)       ...
-                    );
+                        , 'KernelFunction', paramGrid.kernel ...
+                        , 'BoxConstraint', paramGrid.c(j)    ...
+                        );
 
                 predicted = predict(mdl, test);
                 [recall, precision] = calcRecallPrecision(predicted, testLabels);
@@ -74,6 +85,27 @@ function best_mdl = gridSearch(X, y, paramGrid)
                    best_mdl = mdl;
                    best_score = score;
                 end
+            end
+        else
+            for j = 1:length(paramGrid.c)        
+                for k = 1:length(paramGrid.kernelParam)
+
+                    mdl = fitcsvm( train, trainLabels        ...
+                        , 'KernelFunction', paramGrid.kernel ...
+                        , 'BoxConstraint', paramGrid.c(j)    ...
+                        , paramGrid.paramString              ...
+                            , paramGrid.kernelParam(k)       ...
+                        );
+
+                    predicted = predict(mdl, test);
+                    [recall, precision] = calcRecallPrecision(predicted, testLabels);
+                    score = calcF1Score(recall, precision);
+
+                    if score > best_score
+                       best_mdl = mdl;
+                       best_score = score;
+                    end
+                end 
             end
         end
     end
