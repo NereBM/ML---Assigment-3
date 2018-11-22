@@ -23,37 +23,37 @@ function data = trainSVMClass(X, y, k, paramGrid)
         test = X(cv.test{i}, :);
         testLabels = y(cv.test{i});
         
-        % Perform grid search on first iteration of loop.
-        if i == 1
-            best_mdl = gridSearch(train, trainLabels, paramGrid);
-            if paramGrid.kernel == "rbf"
-                kernelParam = best_mdl.KernelParameters.Scale;
-            elseif paramGrid.kernel == "polynomial"
-                kernelParam = best_mdl.KernelParameters.Order;
-            end
+        % Perform grid search on each iteration of loop.
+        best_mdl = gridSearch(train, trainLabels, paramGrid);
+        if paramGrid.kernel == "rbf"
+            kernelParam = best_mdl.BinaryLearners{1,1}.KernelParameters.Scale;  % finds the best scale from the model
+        elseif paramGrid.kernel == "polynomial"
+            kernelParam = best_mdl.BinaryLearners{1,1}.KernelParameters.Order;  % finds the best order from the model
         end
         
-        mdl = fitcsvm( train, trainLabels                          ...
-                     , 'KernelFunction' , paramGrid.kernel         ...
-                     , paramGrid.paramString , kernelParam         ...
-                     , 'BoxConstraint', best_mdl.BoxConstraints(1) ...
-                     );
+        t = templateSVM('Standardize',1,'KernelFunction',paramGrid.kernel ...
+                    , paraGrid.paramString, kernelParam                   ...
+                    , 'BoxConstraint',best_mdl.BoxConstraints(1));  
+
+        %%%% The attempt to get the box constraint from above is where it
+        %%%% crashes, unable to find the box constraint in the best_mdl
+        
+        mdl = fitcecoc( train, trainLabels                          ...
+                    , 'Learners',t );
         
                  
-        predicted = predict(mdl, test);
-        transpose(predicted)
-        testLabels
-        [recall, precision] = calcRecallPrecision(predicted, testLabels)
-        data.score{i} = calcF1Score(recall, precision)
+        predicted = predict(mdl, test);        
+        [recall, precision] = calcRecallPrecision(predicted, testLabels);
+        data.score{i} = calcF1Score(recall, precision);
         data.mdl{i} = mdl;
     end
 end
         
 function best_mdl = gridSearch(X, y, paramGrid)
-    
+
+    gridSearchPartition = partition(length(y), 3);
     best_score = 0;
     for i = 1:3
-        gridSearchPartition = partition(length(y), 3);
         train = X(gridSearchPartition.train{i}, :);
         trainLabels = y(gridSearchPartition.train{i});
         test = X(gridSearchPartition.test{i}, :);
@@ -62,16 +62,19 @@ function best_mdl = gridSearch(X, y, paramGrid)
         for j = 1:length(paramGrid.c)        
             for k = 1:length(paramGrid.kernelParam)
                     
-                mdl = fitcsvm( train, trainLabels        ...
-                    , 'KernelFunction', paramGrid.kernel ...
-                    , 'BoxConstraint', paramGrid.c(j)    ...
-                    , paramGrid.paramString              ...
-                        , paramGrid.kernelParam(k)       ...
-                    );
+                
+                t = templateSVM('Standardize',1,                        ...
+                    'KernelFunction',paramGrid.kernel                   ...
+                    , paramGrid.paramString, paramGrid.kernelParam(k)    ...
+                    , 'BoxConstraint',paramGrid.c(j));
+
+                mdl = fitcecoc( train, trainLabels                ...
+                    , 'Learners',t );
+                
 
                 predicted = predict(mdl, test);
-                [recall, precision] = calcRecallPrecision(predicted, testLabels);
-                score = calcF1Score(recall, precision);
+                confusion_matrix = confusion_matrix_generator(predicted,testLabels,6);
+                score = calcF1Score(confusion_matrix);
 
                 if score > best_score
                    best_mdl = mdl;
@@ -83,33 +86,40 @@ function best_mdl = gridSearch(X, y, paramGrid)
 end
 
 %{
-%   Input:  Vectors containing predicted and actual labels for binary
+%   Input:  Vectors containing predicted and actual labels for multiclass
 %           classification problem.
-%   Output: Recall and precision values.
+%   Output: A confusion matrix for the results
 %}
 
-function [recall, precision] = calcRecallPrecision(predicted, actual)
-    
-    % true positive, false positive and false negative.
-    tp = 0;
-    fp = 0;
-    fn = 0;
+function [confusion_matrix] = confusion_matrix_generator(predicted_results,actual_results,size_of_matrix)
+% This function assumes that we are given two matrices containing the
+% values of the actual results and the predicted results. It will then
+% determine the resulting confusion matrix.
 
-    % Count true positives, false positives and false negatives.
-    for i = 1:length(predicted)
-        if predicted(i) == 1 && actual(i) == 1
-            tp = tp + 1;
-        elseif predicted(i) == 1 && actual(i) == 0
-            fp = fp + 1;
-        elseif predicted(i) == 0 && actual(i) == 1
-            fn = fn + 1;
+confusion_matrix = zeros(size_of_matrix);
+
+        for i=1:length(predicted_results)
+            confusion_matrix(actual_results(i), predicted_results(i)) = confusion_matrix(actual_results(i), predicted_results(i)) + 1;
         end
-    end
-    
-    precision = tp / (tp + fp);
-    recall    = tp / (tp + fn);
 end
 
-function f1Score = calcF1Score(recall, precision)
-    f1Score = 2 * ((precision * recall) / (precision + recall));
+%{
+%   Input:  A confusion matrix
+%
+%   Output: The F1 score for the given confusion matrix
+%}
+
+function f1Score = calcF1Score(confusion_matrix)
+    F1Sum = 0;
+    for i=1:length(confusion_matrix)
+        TP = confusion_matrix(i,i);
+        FP = sum(confusion_matrix(:,i)) - TP;
+        FN = sum(confusion_matrix(i,:)) - TP;
+        
+        PRE = TP / (TP + FP);
+        REC = TP / (FN + TP);
+        F1 = 2 * (PRE*REC)/(PRE+REC);
+        F1Sum = F1Sum + F1;
+    end
+    f1Score = F1Sum/length(confusion_matrix);
 end
