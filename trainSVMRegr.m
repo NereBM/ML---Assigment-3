@@ -43,8 +43,8 @@ function data = trainSVMRegr(X, y, k, paramGrid)
 
         predicted = predict(mdl, test);
         data.score{i} = calcRMSE(predicted, testLabels);
-        data.mdl{i} = mdl;
     end
+    data.mdl = mdl;
 end
 
 
@@ -58,7 +58,7 @@ function best_mdl = gridSearch(X, y, paramGrid)
     best_score = 1000;
     for i = 1:3
         gridSearchPartition = partition(length(y), 3);
-        train = X(gridSearchPartition.train{i}, :);
+        train = X(gridSearchPartition.train{i}, :); 
         trainLabels = y(gridSearchPartition.train{i});
         test = X(gridSearchPartition.test{i}, :);
         testLabels = y(gridSearchPartition.test{i});
