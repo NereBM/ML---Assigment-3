@@ -8,21 +8,21 @@ pose = transpose(pose(:,6));
 points = transpose(points);
 
 %{
-regrParam = struct;
-regrParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
-regrParam.kernel = 'rbf';
-regrParam.paramString = 'KernelScale';
-regrParam.kernelParam = [0.001, 0.01, 0.1, 10, 100, 1000];
-regrParam.epsilon = [0.1, 1, 10, 100];
-regrSVMData = trainSVMRegr(points, pose, 10, regrParam);
+rbfParam = struct;
+rbfParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
+rbfParam.kernel = 'rbf';
+rbfParam.paramString = 'KernelScale';
+rbfParam.kernelParam = [0.001, 0.01, 0.1, 10, 100, 1000];
+rbfParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
+rbf_regr_SVM = trainSVMRegr(points, pose, 10, rbfParam);
 %}
 
-
-classParam = struct;
-classParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
-classParam.kernel = "polynomial";
-classParam.paramString = "PolynomialOrder";
-classParam.kernelParam = [2 3 4];
-classParam.epsilon = [0.001, 0.01, 0.1, 10, 100, 1000];
-classSVM = trainSVMRegr(points, pose, 10, classParam);
-
+%{
+polyParam = struct;
+polyParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
+polyParam.kernel = "polynomial";
+polyParam.paramString = "PolynomialOrder";
+polyParam.kernelParam = [1 2 3 4];
+polyParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
+poly_regr_SVM = trainSVMRegr(points, pose, 10, polyParam);
+%}
