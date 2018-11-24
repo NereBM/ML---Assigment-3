@@ -14,8 +14,8 @@
 %       score :: Vector of RMSE or F1 scores
 %   }
 
-function data = trainSVMRegr(X, y, k, paramGrid)
-    data = struct;
+function best_mdl = trainSVMRegr(X, y, k, paramGrid)
+    best_score = 1000;
     cv = partition(length(y), k);
     
     for i = 1:k
@@ -25,6 +25,8 @@ function data = trainSVMRegr(X, y, k, paramGrid)
                 kernelParam = best_mdl.KernelParameters.Scale;
             elseif paramGrid.kernel == "polynomial"
                 kernelParam = best_mdl.KernelParameters.Order;
+            else
+                kernelParam = best_mdl.ModelParameters.NumPrint;
             end
         end
         mdl = fitrsvm( X(cv.train{i}, :), y(cv.train{i})           ...
@@ -34,9 +36,13 @@ function data = trainSVMRegr(X, y, k, paramGrid)
                      , 'Epsilon', best_mdl.Epsilon                 ...
                      );
         predicted = predict(mdl, X(cv.test{i}, :));
-        data.score{i} = calcRMSE(predicted, y(cv.test{i}));
+        score = calcRMSE(predicted, y(cv.test{i}));
+        
+        if score < best_score
+           best_score = score;
+           best_mdl = mdl;
+        end
     end
-    data.mdl = mdl;
 end
 
 % Tune parameters one at a time for O(3*n) instead of O(3^n) as
@@ -74,6 +80,8 @@ function best_mdl = gridSearch(X, y, paramGrid)
             kernelParam = best_mdl.KernelParameters.Scale;
         elseif paramGrid.kernel == "polynomial"
             kernelParam = best_mdl.KernelParameters.Order;
+        else
+            kernelParam = best_mdl.ModelParameters.NumPrint;
         end
         
         disp('Tuning epsilon...');
