@@ -1,3 +1,8 @@
+function f1Score = f1Score(predicted, actual)
+    [recall, precision] = calcRecallPrecision(predicted, actual);
+    f1Score = calcF1Score(recall, precision);
+end
+
 function [recall, precision] = calcRecallPrecision(predicted, actual)
     
     % true positive, false positive and false negative.
@@ -18,4 +23,8 @@ function [recall, precision] = calcRecallPrecision(predicted, actual)
     
     precision = tp / (tp + fp);
     recall    = tp / (tp + fn);
+end
+
+function f1Score = calcF1Score(recall, precision)
+    f1Score = 2 * ((precision * recall) / (precision + recall));
 end

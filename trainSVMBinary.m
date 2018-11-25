@@ -32,14 +32,13 @@ function best_mdl = trainSVMBinary(X, y, k, paramGrid)
             end
         end
        
-        mdl = fitcsvm( train, trainLabels                            ...
-                     , 'KernelFunction' , paramGrid.kernel           ...
-                     , paramGrid.paramString , kp                    ...
-                     , 'BoxConstraint', cp                           ...
+        mdl = fitcsvm( train, trainLabels                  ...
+                     , 'KernelFunction' , paramGrid.kernel ...
+                     , paramGrid.paramString , kp          ...
+                     , 'BoxConstraint', cp                 ...
                      );
         predicted = predict(mdl, test);        
-        [recall, precision] = calcRecallPrecision(predicted, testLabels);
-        score = calcF1Score(recall, precision);
+        score = f1Score(predicted, testLabels);
         
         if score > best_score
            best_mdl = mdl;
@@ -73,9 +72,7 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
                     );
                 
             predicted = predict(mdl, test);
-            [recall, precision] = ...
-                calcRecallPrecision(predicted, testLabels);
-            score = calcF1Score(recall, precision);
+            score = f1Score(predicted, testLabels);
         
             if score > best_score
                best_mdl = mdl;
@@ -83,41 +80,6 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
             end
             end
         end
-    end
- end
-
-%{
-%   Input:  Vectors containing predicted and actual labels for binary
-%           classification problem.
-%   Output: Recall and precision values.
-%}
-
-function [recall, precision] = calcRecallPrecision(predicted, actual)
-    
-    % true positive, false positive and false negative.
-    tp = 0;
-    fp = 0;
-    fn = 0;
-
-    % Count true positives, false positives and false negatives.
-    for i = 1:length(predicted)
-        if predicted(i) == 1 && actual(i) == 1
-            tp = tp + 1;
-        elseif predicted(i) == 1 && actual(i) == 0
-            fp = fp + 1;
-        elseif predicted(i) == 0 && actual(i) == 1
-            fn = fn + 1;
-        end
-    end
-    
-    precision = tp / (tp + fp);
-    recall    = tp / (tp + fn);
-end
-
-function f1Score = calcF1Score(recall, precision)
-    f1Score = 2 * ((precision * recall) / (precision + recall));
-    if isnan(f1Score)
-        f1Score = 0;
     end
 end
 
@@ -142,9 +104,7 @@ function best_mdl = single_gridSearch(X, y, paramGrid)
                     , paramGrid.kernelParam(j)       ...
                 );
             predicted = predict(mdl, test);
-            [recall, precision] = ...
-                calcRecallPrecision(predicted, testLabels);
-            score = calcF1Score(recall, precision);
+            score = f1Score(predicted, actual);
         
             if score > best_score
                best_mdl = mdl;
@@ -168,9 +128,7 @@ function best_mdl = single_gridSearch(X, y, paramGrid)
                 , paramGrid.paramString, kernelParam ...
                 );
             predicted = predict(mdl, test);
-            [recall, precision] = ...
-                calcRecallPrecision(predicted, testLabels);
-            score = calcF1Score(recall, precision);
+            score = f1Score(predicted, testLabels);
         
             if score > best_score
                best_mdl = mdl;
