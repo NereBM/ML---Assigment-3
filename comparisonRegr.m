@@ -8,20 +8,20 @@
 %
 %   Output: Struct with format:
 %       scores {
-%           ann :: Vector of rmse scores for neural network
-%           rbf :: Vector of rmse scores for rbf/gaussian svm
-%           lin :: Vector of rmse scores for linear svm
-%           pol :: Vector of rmse scores for polynomial svm
+%           ann :: Vector of rmse scores for neural network - length k
+%           rbf :: Vector of rmse scores for rbf/gaussian svm - length k
+%           lin :: Vector of rmse scores for linear svm - length k
+%           pol :: Vector of rmse scores for polynomial svm - length k
 %       }
 %}
 function scores = comparisonRegr(X, y, k)
 
-    load('svm/rbfSVM.mat');
-    load('svm/polSVM.mat');
-    load('svm/linSVM.mat');
+    load('svm/regr/rbfSVM.mat');
+    load('svm/regr/polSVM.mat');
+    load('svm/regr/linSVM.mat');
 
     cv = partition(length(y), k);
-    scores = struct;
+    scores     = struct;
     scores.ann = zeros(1, k);
     scores.rbf = zeros(1, k);
     scores.lin = zeros(1, k);

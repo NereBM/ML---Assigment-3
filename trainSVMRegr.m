@@ -7,12 +7,7 @@
 %       sigma :: Vector of values for sigma
 %   }
 %
-%   Output: data struct with format:
-%   
-%   struct data {
-%       mdl :: SVM model
-%       score :: Vector of RMSE or F1 scores
-%   }
+%   Output: SVM with lowest rmse.
 
 function best_mdl = trainSVMRegr(X, y, k, paramGrid)
     best_score = 1000;
@@ -123,9 +118,4 @@ function best_mdl = gridSearch(X, y, paramGrid)
            best_score = score;
         end
     end
-end
-
-
-function rmse = calcRMSE(predicted, actual)
-    rmse = sqrt(mean(predicted - transpose(actual)).^2);
 end

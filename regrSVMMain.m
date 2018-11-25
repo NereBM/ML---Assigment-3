@@ -34,7 +34,7 @@ polyParam = struct;
 polyParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
 polyParam.kernel = "polynomial";
 polyParam.paramString = "PolynomialOrder";
-polyParam.kernelParam = [1 2 3 4];
+polyParam.kernelParam = [2 3 4];
 polyParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
 poly_regr_svm = trainSVMRegr(points, pose, 10, polyParam);
 %}
