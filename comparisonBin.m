@@ -17,9 +17,9 @@
 function scores = comparisonRegr(X, y, k)
 
     % Load svms previously tuned using tuneSVM*.m
-    load('svm/regr/rbfSVM.mat');
-    load('svm/regr/polSVM.mat');
-    load('svm/regr/linSVM.mat');
+    load('svm/bin/rbfSVM.mat');
+    load('svm/bin/polSVM.mat');
+    load('svm/bin/linSVM.mat');
 
     cv = partition(length(y), k);
     scores     = struct;
@@ -27,6 +27,7 @@ function scores = comparisonRegr(X, y, k)
     scores.rbf = zeros(1, k);
     scores.lin = zeros(1, k);
     scores.pol = zeros(1, k);
+    scores.tre = zeros(1, k);
 
     for i = 1:k
         trainData   = X(cv.train{i}, :);
@@ -39,31 +40,28 @@ function scores = comparisonRegr(X, y, k)
         netPredicted = sim(net, transpose(testData));
         scores.ann(i) = calcRMSE(netPredicted, testLabels);
         
+        tree = createTree(trainData, trainLabels);
+        treePredicted = classify(testData, tree);
+        scores.tre(i) = f1Score(treePredicted, testLabels);
+        
         rbf = fitrsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'rbf'                         ...
             , 'BoxConstraint'     , rbfSVM.BoxConstraints(1)      ...
-            , 'KernelScale'       , rbfSVM.KernelParameters.Scale ...
-            , 'Epsilon'           , rbfSVM.Epsilon);
+            , 'KernelScale'       , rbfSVM.KernelParameters.Scale);
         rbfPredicted = transpose(predict(rbf, testData));
         scores.rbf(i) = calcRMSE(rbfPredicted, testLabels);
         
         lin = fitrsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'linear'                      ...
-            , 'BoxConstraint'     , linSVM.BoxConstraints(1)      ...
-            , 'Epsilon'           , linSVM.Epsilon);
+            , 'BoxConstraint'     , linSVM.BoxConstraints(1));
         linPredicted = transpose(predict(lin, testData));
         scores.lin(i) = calcRMSE(linPredicted, testLabels);
         
         pol = fitrsvm(trainData , trainLabels                     ...
             , 'KernelFunction'  , 'polynomial'                    ...
             , 'BoxConstraint'   , polSVM.BoxConstraints(1)        ...
-            , 'PolynomialOrder' , polSVM.KernelParameters.Order   ...
-            , 'Epsilon'         , polSVM.Epsilon);
+            , 'PolynomialOrder' , polSVM.KernelParameters.Order);
         polPredicted = transpose(predict(pol, testData));
         scores.pol(i) = calcRMSE(polPredicted, testLabels);      
     end
-end
-
-function rmse = calcRMSE(predicted, actual)
-    rmse = sqrt(mean(predicted - actual).^2);
 end
