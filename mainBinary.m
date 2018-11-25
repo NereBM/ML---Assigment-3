@@ -5,15 +5,12 @@ load('data/labels.mat');
 points = reshape(points, [132, 150]);
 points = transpose(points);
 
-
 classParam = struct;
 classParam.c = [1 10 100 500 1000];
 classParam.kernel = 'rbf';
 classParam.paramString = 'KernelScale';
-classParam.kernelParam = [0.001 0.01 0.1 50];
+classParam.kernelParam = [0.001 0.01 0.1 50 100];
 rbfBinSVM = tuneSVMBinary(points, labels, 10, classParam);
-fprintf("Sigma = %d\n", rbfBinSVM.KernelParameters.Scale);
-
 
 %{
 classParam = struct;

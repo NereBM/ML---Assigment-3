@@ -37,21 +37,13 @@ function best_mdl = tuneSVMBinary(X, y, k, paramGrid)
                      , paramGrid.paramString , kp          ...
                      , 'BoxConstraint', cp                 ...
                      );
-        predicted = predict(mdl, test);        
+        predicted = predict(mdl, test);    
         score = f1Score(predicted, testLabels);
-        disp(score);
         
         if score > best_score
            best_mdl = mdl;
            best_score = score;
         end
-    end
-    
-    % Double values in kernelParam vector if scores poor.
-    if best_score <= 0.80
-        paramGrid.kernelParam = ...
-            arrayfun(@(x) (x * 2), paramGrid.kernelParam);
-        tuneSVMBinary(X, y, k, paramGrid);
     end
 end
 
@@ -71,9 +63,9 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
             for k = 1:length(paramGrid.c)
                
                 % Using auto instead of paramGrid.kernelParam
-                mdl = fitrsvm( train, trainLabels        ...
+                mdl = fitcsvm( train, trainLabels        ...
                     , 'KernelFunction', paramGrid.kernel ...
-                    , 'BoxConstraint', 100 ...%paramGrid.c(k)    ...
+                    , 'BoxConstraint', paramGrid.c(k)    ...
                     , paramGrid.paramString              ...
                         , paramGrid.kernelParam(j)       ...
                     );
