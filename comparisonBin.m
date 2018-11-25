@@ -2,9 +2,6 @@
 %   Input: X - Features
 %          y - Labels
 %          k - Number of folds
-%          rbfSVM - model of rbf or gaussian SVM
-%          linSVM - model of linear SVM
-%          polSVM - model of polynomial SVM
 %
 %   Output: Struct with format:
 %       scores {
@@ -14,7 +11,7 @@
 %           pol :: Vector of rmse scores for polynomial svm - length k
 %       }
 %}
-function scores = comparisonRegr(X, y, k)
+function scores = comparisonBin(X, y, k)
 
     % Load svms previously tuned using tuneSVM*.m
     load('svm/bin/rbfSVM.mat');
@@ -36,32 +33,32 @@ function scores = comparisonRegr(X, y, k)
         testLabels  = y(cv.test{i});
         
         net = feedforwardnet(10);
-        net = train(net, transpose(trainData), trainLabels);  
-        netPredicted = sim(net, transpose(testData));
-        scores.ann(i) = calcRMSE(netPredicted, testLabels);
+        net = train(net, transpose(trainData), transpose(trainLabels));  
+        netPredicted = round(sim(net, transpose(testData)));
+        scores.ann(i) = f1Score(netPredicted, testLabels);
         
-        tree = createTree(trainData, trainLabels);
-        treePredicted = classify(testData, tree);
+        tree = createTree(transpose(trainData), transpose(trainLabels));
+        treePredicted = classify(transpose(testData), tree);
         scores.tre(i) = f1Score(treePredicted, testLabels);
         
-        rbf = fitrsvm(trainData   , trainLabels                   ...
+        rbf = fitcsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'rbf'                         ...
-            , 'BoxConstraint'     , rbfSVM.BoxConstraints(1)      ...
-            , 'KernelScale'       , rbfSVM.KernelParameters.Scale);
+            , 'BoxConstraint'     , rbfBinSVM.BoxConstraints(1)   ...
+            , 'KernelScale'       , rbfBinSVM.KernelParameters.Scale);
         rbfPredicted = transpose(predict(rbf, testData));
-        scores.rbf(i) = calcRMSE(rbfPredicted, testLabels);
+        scores.rbf(i) = f1Score(rbfPredicted, testLabels);
         
-        lin = fitrsvm(trainData   , trainLabels                   ...
+        lin = fitcsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'linear'                      ...
-            , 'BoxConstraint'     , linSVM.BoxConstraints(1));
+            , 'BoxConstraint'     , linBinSVM.BoxConstraints(1));
         linPredicted = transpose(predict(lin, testData));
-        scores.lin(i) = calcRMSE(linPredicted, testLabels);
+        scores.lin(i) = f1Score(linPredicted, testLabels);
         
-        pol = fitrsvm(trainData , trainLabels                     ...
-            , 'KernelFunction'  , 'polynomial'                    ...
-            , 'BoxConstraint'   , polSVM.BoxConstraints(1)        ...
-            , 'PolynomialOrder' , polSVM.KernelParameters.Order);
+        pol = fitcsvm(trainData , trainLabels                        ...
+            , 'KernelFunction'  , 'polynomial'                       ...
+            , 'BoxConstraint'   , polBinSVM.BoxConstraints(1)        ...
+            , 'PolynomialOrder' , polBinSVM.KernelParameters.Order);
         polPredicted = transpose(predict(pol, testData));
-        scores.pol(i) = calcRMSE(polPredicted, testLabels);      
+        scores.pol(i) = f1Score(polPredicted, testLabels);      
     end
 end

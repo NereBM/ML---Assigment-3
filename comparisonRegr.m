@@ -2,9 +2,6 @@
 %   Input: X - Features
 %          y - Labels
 %          k - Number of folds
-%          rbfSVM - model of rbf or gaussian SVM
-%          linSVM - model of linear SVM
-%          polSVM - model of polynomial SVM
 %
 %   Output: Struct with format:
 %       scores {
@@ -17,9 +14,9 @@
 function scores = comparisonRegr(X, y, k)
 
     % Load svms previously tuned using tuneSVM*.m
-    load('svm/regr/rbfSVM.mat');
-    load('svm/regr/polSVM.mat');
-    load('svm/regr/linSVM.mat');
+    load('svm/regr/rbfRegrSVM.mat');
+    load('svm/regr/polRegrSVM.mat');
+    load('svm/regr/linRegrSVM.mat');
 
     cv = partition(length(y), k);
     scores     = struct;

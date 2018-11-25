@@ -7,15 +7,15 @@ points = reshape(points, ...
 pose = transpose(pose(:,6));
 points = transpose(points);
 
-%{
+
 rbfParam = struct;
 rbfParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
 rbfParam.kernel = 'rbf';
 rbfParam.paramString = 'KernelScale';
 rbfParam.kernelParam = [0.001, 0.01, 0.1, 10, 100, 1000];
 rbfParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-rbf_regr_svm = tuneSVMRegr(points, pose, 10, rbfParam);
-%}
+rbfBinSVM = tuneSVMRegr(points, pose, 10, rbfParam);
+
 
 %{
 linearParam = struct;
@@ -26,7 +26,8 @@ linearParam.kernel = 'linear';
 linearParam.paramString = 'NumPrint';
 linearParam.kernelParam = 1000;
 linearParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-linear_regr_svm = tuneSVMRegr(points, pose, 10, linearParam);
+linBinSVM = tuneSVMRegr(points, pose, 10, linearParam);
+save('svm/regr/linSVM.mat', 'linBinSVM');
 %}
 
 %{
@@ -36,5 +37,8 @@ polyParam.kernel = "polynomial";
 polyParam.paramString = "PolynomialOrder";
 polyParam.kernelParam = [2 3 4];
 polyParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-poly_regr_svm = tuneSVMRegr(points, pose, 10, polyParam);
+polBinSVM = tuneSVMRegr(points, pose, 10, polyParam);
+save('svm/regr/polSVM.mat', 'polBinSVM');
 %}
+
+comparisonRegr(points, pose, 10);

@@ -71,9 +71,7 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
                     );
 
             predicted = predict(mdl, test);
-            score = f1Score(predicted, testLabels);
-            fprintf("BoxConstraint = %d, Sigma/PolynomialOrder = %d, Score = %d\n" ...
-                , mdl.BoxConstraints(1), mdl.KernelParameters.Scale, score);        
+            score = f1Score(predicted, testLabels);   
             if score > best_score
                best_mdl = mdl;
                best_score = score;

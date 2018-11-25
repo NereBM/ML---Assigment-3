@@ -5,31 +5,45 @@ load('data/labels.mat');
 points = reshape(points, [132, 150]);
 points = transpose(points);
 
-%{
-classParam = struct;
-classParam.c = [1 10 100 500 1000];
-classParam.kernel = 'rbf';
-classParam.paramString = 'KernelScale';
-classParam.kernelParam = [0.001 0.01 0.1 50 100];
-rbfBinSVM = tuneSVMBinary(points, labels, 10, classParam);
-%}
+% Optional - shift values by n in points in points and labels
+%            where n = 1 to size(points, 2).
+% ===============================================================
+rndNum = randi([1, size(points, 2)], 1, 1);
+points = circshift(points, rndNum, 2);
+labels = circshift(labels, rndNum);
+% ===============================================================
 
-%{
-classParam = struct;
-classParam.c = [1, 10, 100, 1000];
-classParam.kernel = "polynomial";
-classParam.paramString = "PolynomialOrder";
-classParam.kernelParam = [2 3 4];
-polyBinSVM = tuneSVMBinary(binaryPoints, binaryLabels, 10, classParam);
-%}
+% RBF SVM
+rbfParam = struct;
+rbfParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
+rbfParam.kernel = 'rbf';
+rbfParam.paramString = 'KernelScale';
+rbfParam.kernelParam = [0.001, 0.01, 0.1, 10, 50, 100, 1000];
+rbfBinSVM = tuneSVMBinary(points, labels, 10, rbfParam);
+save('svm/bin/rbfSVM.mat', 'rbfBinSVM');
 
-%{
-classParam = struct;
-classParam.c = [1, 10, 100, 1000];
-classParam.kernel = "linear";
+% Polynomial SVM
+polyParam = struct;
+polyParam.c = [1, 10, 100, 1000];
+polyParam.kernel = "polynomial";
+polyParam.paramString = "PolynomialOrder";
+polyParam.kernelParam = [2 3 4];
+polBinSVM = tuneSVMBinary(points, labels, 10, polyParam);
+save('svm/bin/polSVM.mat', 'polBinSVM');
+
+% Linear SVM
+linearParam = struct;
+linearParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
+linearParam.kernel = 'linear';
 % Set parameters unrelated to training so same number of arguments are 
 % provided -> Can use same function to train rbf, polynomial and linear.
-classParam.paramString = 'NumPrint';
-classParam.kernelParam = 1000;
-linBinSVM = tuneSVMBinary(binaryPoints, binaryLabels, 10, classParam);
-%}
+linearParam.paramString = 'NumPrint';
+linearParam.kernelParam = 1000;
+linBinSVM = tuneSVMBinary(points, labels, 10, linearParam);
+save('svm/bin/linSVM.mat', 'linBinSVM');
+
+% Compare svms to ann and decision tree.
+scores = comparisonBin(points, labels, 10)
+
+% Get mean for each vector in scores struct
+means = structfun(@(x) mean(x), scores)
