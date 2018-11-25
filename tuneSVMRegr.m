@@ -9,7 +9,7 @@
 %
 %   Output: SVM with lowest rmse.
 
-function best_mdl = trainSVMRegr(X, y, k, paramGrid)
+function best_mdl = tuneSVMRegr(X, y, k, paramGrid)
     best_score = 1000;
     cv = partition(length(y), k);
     

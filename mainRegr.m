@@ -14,7 +14,7 @@ rbfParam.kernel = 'rbf';
 rbfParam.paramString = 'KernelScale';
 rbfParam.kernelParam = [0.001, 0.01, 0.1, 10, 100, 1000];
 rbfParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-rbf_regr_svm = trainSVMRegr(points, pose, 10, rbfParam);
+rbf_regr_svm = tuneSVMRegr(points, pose, 10, rbfParam);
 %}
 
 %{
@@ -26,7 +26,7 @@ linearParam.kernel = 'linear';
 linearParam.paramString = 'NumPrint';
 linearParam.kernelParam = 1000;
 linearParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-linear_regr_svm = trainSVMRegr(points, pose, 10, linearParam);
+linear_regr_svm = tuneSVMRegr(points, pose, 10, linearParam);
 %}
 
 %{
@@ -36,5 +36,5 @@ polyParam.kernel = "polynomial";
 polyParam.paramString = "PolynomialOrder";
 polyParam.kernelParam = [2 3 4];
 polyParam.epsilon = [0.001, 0.01, 0.1, 1, 10, 100, 1000];
-poly_regr_svm = trainSVMRegr(points, pose, 10, polyParam);
+poly_regr_svm = tuneSVMRegr(points, pose, 10, polyParam);
 %}

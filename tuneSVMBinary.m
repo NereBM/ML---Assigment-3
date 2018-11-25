@@ -8,7 +8,7 @@
 %
 %   Output: SVM with greatest f1 score.
 
-function best_mdl = trainSVMBinary(X, y, k, paramGrid)
+function best_mdl = tuneSVMBinary(X, y, k, paramGrid)
     cv = partition(length(y), k);
     best_score = -1;
     
@@ -39,11 +39,19 @@ function best_mdl = trainSVMBinary(X, y, k, paramGrid)
                      );
         predicted = predict(mdl, test);        
         score = f1Score(predicted, testLabels);
+        disp(score);
         
         if score > best_score
            best_mdl = mdl;
            best_score = score;
         end
+    end
+    
+    % Double values in kernelParam vector if scores poor.
+    if best_score <= 0.80
+        paramGrid.kernelParam = ...
+            arrayfun(@(x) (x * 2), paramGrid.kernelParam);
+        tuneSVMBinary(X, y, k, paramGrid);
     end
 end
 
@@ -61,19 +69,19 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
 
         for j = 1:length(paramGrid.kernelParam)
             for k = 1:length(paramGrid.c)
-                fprintf("BoxConstraint = %d, Sigma/PolynomialOrder = %d\n" ...
-                    , paramGrid.c(k), paramGrid.kernelParam(j));
-                
+               
+                % Using auto instead of paramGrid.kernelParam
                 mdl = fitrsvm( train, trainLabels        ...
                     , 'KernelFunction', paramGrid.kernel ...
-                    , 'BoxConstraint', paramGrid.c(k)    ...
+                    , 'BoxConstraint', 100 ...%paramGrid.c(k)    ...
                     , paramGrid.paramString              ...
                         , paramGrid.kernelParam(j)       ...
                     );
-                
+
             predicted = predict(mdl, test);
             score = f1Score(predicted, testLabels);
-        
+            fprintf("BoxConstraint = %d, Sigma/PolynomialOrder = %d, Score = %d\n" ...
+                , mdl.BoxConstraints(1), mdl.KernelParameters.Scale, score);        
             if score > best_score
                best_mdl = mdl;
                best_score = score;
@@ -82,64 +90,3 @@ function best_mdl = nestedGridSearch(X, y, paramGrid)
         end
     end
 end
-
-%{
-function best_mdl = single_gridSearch(X, y, paramGrid)
-
-    part = partition(length(y), 3);
-    best_score = -1;
-    
-    for i = 1:3
-        train = X(part.train{i}, :);
-        trainLabels = y(part.train{i});
-        test = X(part.test{i}, :);
-        testLabels = y(part.test{i});
-             
-        disp('Tuning sigma/polynomial order...');
-        for j = 1:length(paramGrid.kernelParam)
-            mdl = fitrsvm( train, trainLabels        ...
-                , 'KernelFunction', paramGrid.kernel ...
-                , 'BoxConstraint', paramGrid.c(1)    ...
-                , paramGrid.paramString              ...
-                    , paramGrid.kernelParam(j)       ...
-                );
-            predicted = predict(mdl, test);
-            score = f1Score(predicted, actual);
-        
-            if score > best_score
-               best_mdl = mdl;
-               best_score = score;
-            end
-        end
-
-        if paramGrid.kernel == "rbf" || paramGrid.kernel == "gaussian"
-            kernelParam = mdl.KernelParameters.Scale;
-        elseif paramGrid.kernel == "polynomial"
-            kernelParam = mdl.KernelParameters.Order;
-        else
-            kernelParam = mdl.ModelParameters.NumPrint;
-        end
-        
-        disp('Tuning box constraints...');
-        for j = 1:length(paramGrid.c)
-            mdl = fitrsvm( train, trainLabels        ...
-                , 'KernelFunction', paramGrid.kernel ...
-                , 'BoxConstraint', paramGrid.c(j)    ...
-                , paramGrid.paramString, kernelParam ...
-                );
-            predicted = predict(mdl, test);
-            score = f1Score(predicted, testLabels);
-        
-            if score > best_score
-               best_mdl = mdl;
-               best_score = score;
-            end
-        end
-        
-        if score > best_score
-           best_mdl = mdl;
-           best_score = score;
-        end
-    end
- end
-%}

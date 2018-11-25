@@ -1,6 +1,9 @@
 function f1Score = f1Score(predicted, actual)
     [recall, precision] = calcRecallPrecision(predicted, actual);
     f1Score = calcF1Score(recall, precision);
+    if isnan(f1Score)
+        f1Score = 0;
+    end
 end
 
 function [recall, precision] = calcRecallPrecision(predicted, actual)
