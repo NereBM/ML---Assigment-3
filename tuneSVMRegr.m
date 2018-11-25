@@ -119,3 +119,7 @@ function best_mdl = gridSearch(X, y, paramGrid)
         end
     end
 end
+
+function rmse = calcRMSE(predicted, actual)
+    rmse = sqrt(mean(predicted - transpose(actual)).^2);	
+end
