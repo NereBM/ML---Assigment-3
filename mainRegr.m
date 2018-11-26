@@ -47,4 +47,4 @@ save('svm/regr/polSVM.mat', 'polRegrSVM');
 scores = comparisonRegr(points, pose, 10);
 
 % Get mean for each vector in scores struct
-means = structfun(@(x) mean(x), scores)
+means = structfun(@(x) mean(x), scores);

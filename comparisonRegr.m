@@ -31,8 +31,9 @@ function scores = comparisonRegr(X, y, k)
         testData    = X(cv.test{i}, :);
         testLabels  = y(cv.test{i});
         
-        net           = feedforwardnet(10);
-        net           = train(net, transpose(trainData), trainLabels);  
+        net = feedforwardnet(10);
+        net.trainParam.showWindow = 0;
+        net = train(net, transpose(trainData), trainLabels);  
         netPredicted  = sim(net, transpose(testData));
         scores.ann(i) = calcRMSE(netPredicted, testLabels);
         

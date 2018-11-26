@@ -5,7 +5,8 @@ load('data/labels.mat');
 points = reshape(points, [132, 150]);
 points = transpose(points);
 
-
+% Called these earlier, commented out to save time
+%{
 % RBF SVM
 rbfParam = struct;
 rbfParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
@@ -17,7 +18,7 @@ save('svm/bin/rbfSVM.mat', 'rbfBinSVM');
 
 % Polynomial SVM
 polyParam = struct;
-polyParam.c = [1, 10, 100, 1000];
+polyParam.c = [0.001, 0.01, 0.1, 10, 100, 1000];
 polyParam.kernel = "polynomial";
 polyParam.paramString = "PolynomialOrder";
 polyParam.kernelParam = [2 3 4];
@@ -34,9 +35,10 @@ linearParam.paramString = 'NumPrint';
 linearParam.kernelParam = 1000;
 linBinSVM = tuneSVMBinary(points, labels, 10, linearParam);
 save('svm/bin/linSVM.mat', 'linBinSVM');
+%}
 
 % Compare svms to ann and decision tree.
-scores = comparisonBin(points, labels, 10)
+scores = comparisonBin(points, labels, 10);
 
 % Get mean for each vector in scores struct
-means = structfun(@(x) mean(x), scores)
+means = structfun(@(x) mean(x), scores);

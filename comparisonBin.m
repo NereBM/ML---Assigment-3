@@ -33,6 +33,7 @@ function scores = comparisonBin(X, y, k)
         testLabels  = y(cv.test{i});
         
         net = feedforwardnet(10);
+        net.trainParam.showWindow = 0;
         net = train(net, transpose(trainData), transpose(trainLabels));  
         netPredicted = round(sim(net, transpose(testData)));
         scores.ann(i) = f1Score(netPredicted, testLabels);
