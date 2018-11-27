@@ -65,7 +65,6 @@ function scores = comparisonBin(X, y, k)
         linPredicted = transpose(predict(lin, testData));
         scores.lin(i) = f1Score(linPredicted, testLabels);
         scores.linPredicted = [scores.linPredicted linPredicted];
-
         
         pol = fitcsvm(trainData , trainLabels                        ...
             , 'KernelFunction'  , 'polynomial'                       ...

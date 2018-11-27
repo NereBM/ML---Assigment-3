@@ -49,6 +49,12 @@ scores = comparisonRegr(points, pose, 10);
 % Get mean for each vector in scores struct
 %means = structfun(@(x) mean(x), scores)
 
+% Number of support vectors for each SVM
+svRbf = length(rbfBinSVM.IsSupportVector(rbfBinSVM.IsSupportVector == 1));
+svPol = length(rbfBinSVM.IsSupportVector(polBinSVM.IsSupportVector == 1));
+svLin = length(rbfBinSVM.IsSupportVector(linBinSVM.IsSupportVector == 1));
+
+% ttest2
 rbf_pol = ttest2(scores.rbfPredicted,scores.polPredicted);
 rbf_lin = ttest2(scores.rbfPredicted,scores.linPredicted);
 rbf_ann = ttest2(scores.rbfPredicted,scores.annPredicted);
