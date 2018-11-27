@@ -50,9 +50,9 @@ scores = comparisonRegr(points, pose, 10);
 %means = structfun(@(x) mean(x), scores)
 
 % Number of support vectors for each SVM
-svRbf = length(rbfBinSVM.IsSupportVector(rbfBinSVM.IsSupportVector == 1));
-svPol = length(rbfBinSVM.IsSupportVector(polBinSVM.IsSupportVector == 1));
-svLin = length(rbfBinSVM.IsSupportVector(linBinSVM.IsSupportVector == 1));
+svRbf = length(rbfRegrSVM.IsSupportVector(rbfRegrSVM.IsSupportVector == 1));
+svPol = length(polRegrSVM.IsSupportVector(polRegrSVM.IsSupportVector == 1));
+svLin = length(linRegrSVM.IsSupportVector(linRegrSVM.IsSupportVector == 1));
 
 % ttest2
 rbf_pol = ttest2(scores.rbfPredicted,scores.polPredicted);

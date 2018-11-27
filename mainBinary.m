@@ -44,8 +44,8 @@ means = structfun(@(x) mean(x), scores);
 
 % Number of support vectors for each SVM
 svRbf = length(rbfBinSVM.IsSupportVector(rbfBinSVM.IsSupportVector == 1));
-svPol = length(rbfBinSVM.IsSupportVector(polBinSVM.IsSupportVector == 1));
-svLin = length(rbfBinSVM.IsSupportVector(linBinSVM.IsSupportVector == 1));
+svPol = length(polBinSVM.IsSupportVector(polBinSVM.IsSupportVector == 1));
+svLin = length(linBinSVM.IsSupportVector(linBinSVM.IsSupportVector == 1));
 
 %{
 rbf_pol = ttest2(scores.rbfPredicted,scores.polPredicted);
