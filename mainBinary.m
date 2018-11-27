@@ -1,5 +1,5 @@
-clear;
-clc;
+%clear;
+%clc;
 load('data/facialPoints.mat');
 load('data/labels.mat');
 points = reshape(points, [132, 150]);
@@ -36,9 +36,20 @@ linearParam.kernelParam = 1000;
 linBinSVM = tuneSVMBinary(points, labels, 10, linearParam);
 save('svm/bin/linSVM.mat', 'linBinSVM');
 %}
-
 % Compare svms to ann and decision tree.
 scores = comparisonBin(points, labels, 10);
 
 % Get mean for each vector in scores struct
-means = structfun(@(x) mean(x), scores);
+%means = structfun(@(x) mean(x), scores)
+
+
+rbf_pol = ttest2(scores.rbfPredicted,scores.polPredicted);
+rbf_lin = ttest2(scores.rbfPredicted,scores.linPredicted);
+rbf_ann = ttest2(scores.rbfPredicted,scores.annPredicted);
+rbf_tre = ttest2(scores.rbfPredicted,scores.trePredicted);
+pol_lin = ttest2(scores.polPredicted,scores.linPredicted); 
+pol_ann = ttest2(scores.polPredicted,scores.annPredicted);
+pol_tre = ttest2(scores.polPredicted,scores.trePredicted);
+lin_ann = ttest2(scores.linPredicted,scores.annPredicted);
+lin_tre = ttest2(scores.linPredicted,scores.trePredicted);
+ann_tre = ttest2(scores.annPredicted,scores.trePredicted);

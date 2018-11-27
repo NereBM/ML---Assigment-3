@@ -25,6 +25,13 @@ function scores = comparisonBin(X, y, k)
     scores.lin = zeros(1, k);
     scores.pol = zeros(1, k);
     scores.tre = zeros(1, k);
+    
+    scores.annPredicted = [];
+    scores.rbfPredicted = [];
+    scores.linPredicted = [];
+    scores.polPredicted = [];
+    scores.trePredicted = [];
+    
 
     for i = 1:k
         trainData   = X(cv.train{i}, :);
@@ -37,10 +44,12 @@ function scores = comparisonBin(X, y, k)
         net = train(net, transpose(trainData), transpose(trainLabels));  
         netPredicted = round(sim(net, transpose(testData)));
         scores.ann(i) = f1Score(netPredicted, testLabels);
+        scores.annPredicted = [scores.annPredicted netPredicted];
         
         tree = createTree(transpose(trainData), transpose(trainLabels));
         treePredicted = classify(transpose(testData), tree);
         scores.tre(i) = f1Score(treePredicted, testLabels);
+        scores.trePredicted = [scores.trePredicted treePredicted'];
         
         rbf = fitcsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'rbf'                         ...
@@ -48,18 +57,23 @@ function scores = comparisonBin(X, y, k)
             , 'KernelScale'       , rbfBinSVM.KernelParameters.Scale);
         rbfPredicted = transpose(predict(rbf, testData));
         scores.rbf(i) = f1Score(rbfPredicted, testLabels);
-        
+        scores.rbfPredicted = [scores.rbfPredicted rbfPredicted];
+
         lin = fitcsvm(trainData   , trainLabels                   ...
             , 'KernelFunction'    , 'linear'                      ...
             , 'BoxConstraint'     , linBinSVM.BoxConstraints(1));
         linPredicted = transpose(predict(lin, testData));
         scores.lin(i) = f1Score(linPredicted, testLabels);
+        scores.linPredicted = [scores.linPredicted linPredicted];
+
         
         pol = fitcsvm(trainData , trainLabels                        ...
             , 'KernelFunction'  , 'polynomial'                       ...
             , 'BoxConstraint'   , polBinSVM.BoxConstraints(1)        ...
             , 'PolynomialOrder' , polBinSVM.KernelParameters.Order);
         polPredicted = transpose(predict(pol, testData));
-        scores.pol(i) = f1Score(polPredicted, testLabels);      
+        scores.pol(i) = f1Score(polPredicted, testLabels); 
+        scores.polPredicted = [scores.polPredicted polPredicted];
+
     end
 end

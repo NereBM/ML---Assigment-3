@@ -47,4 +47,11 @@ save('svm/regr/polSVM.mat', 'polRegrSVM');
 scores = comparisonRegr(points, pose, 10);
 
 % Get mean for each vector in scores struct
-means = structfun(@(x) mean(x), scores);
+%means = structfun(@(x) mean(x), scores)
+
+rbf_pol = ttest2(scores.rbfPredicted,scores.polPredicted);
+rbf_lin = ttest2(scores.rbfPredicted,scores.linPredicted);
+rbf_ann = ttest2(scores.rbfPredicted,scores.annPredicted);
+pol_lin = ttest2(scores.polPredicted,scores.linPredicted); 
+pol_ann = ttest2(scores.polPredicted,scores.annPredicted);
+lin_ann = ttest2(scores.linPredicted,scores.annPredicted);

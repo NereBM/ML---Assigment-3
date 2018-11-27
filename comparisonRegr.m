@@ -24,6 +24,11 @@ function scores = comparisonRegr(X, y, k)
     scores.rbf = zeros(1, k);
     scores.lin = zeros(1, k);
     scores.pol = zeros(1, k);
+    
+    scores.annPredicted = [];
+    scores.rbfPredicted = [];
+    scores.linPredicted = [];
+    scores.polPredicted = [];
 
     for i = 1:k
         trainData   = X(cv.train{i}, :);
@@ -36,6 +41,8 @@ function scores = comparisonRegr(X, y, k)
         net = train(net, transpose(trainData), trainLabels);  
         netPredicted  = sim(net, transpose(testData));
         scores.ann(i) = calcRMSE(netPredicted, testLabels);
+        scores.annPredicted = [scores.annPredicted netPredicted];
+
         
         rbf = fitrsvm(trainData   , trainLabels                       ...
             , 'KernelFunction'    , 'rbf'                             ...
@@ -44,6 +51,7 @@ function scores = comparisonRegr(X, y, k)
             , 'Epsilon'           , rbfRegrSVM.Epsilon);
         rbfPredicted = transpose(predict(rbf, testData));
         scores.rbf(i) = calcRMSE(rbfPredicted, testLabels);
+        scores.rbfPredicted = [scores.rbfPredicted rbfPredicted];
         
         lin = fitrsvm(trainData   , trainLabels                       ...
             , 'KernelFunction'    , 'linear'                          ...
@@ -51,6 +59,7 @@ function scores = comparisonRegr(X, y, k)
             , 'Epsilon'           , linRegrSVM.Epsilon);
         linPredicted = transpose(predict(lin, testData));
         scores.lin(i) = calcRMSE(linPredicted, testLabels);
+        scores.linPredicted = [scores.linPredicted linPredicted];
         
         pol = fitrsvm(trainData , trainLabels                         ...
             , 'KernelFunction'  , 'polynomial'                        ...
@@ -58,7 +67,8 @@ function scores = comparisonRegr(X, y, k)
             , 'PolynomialOrder' , polRegrSVM.KernelParameters.Order   ...
             , 'Epsilon'         , polRegrSVM.Epsilon);
         polPredicted = transpose(predict(pol, testData));
-        scores.pol(i) = calcRMSE(polPredicted, testLabels);      
+        scores.pol(i) = calcRMSE(polPredicted, testLabels); 
+        scores.polPredicted = [scores.polPredicted polPredicted];
     end
 end
 
